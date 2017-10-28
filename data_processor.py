@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 
+
 INPUT_FILE = "./data/train_10000.csv"
 OUTPUT_FILE = "./processed_data/data_10000.h5"
 
@@ -13,7 +14,8 @@ if __name__ == "__main__":
         },
         keep_default_na=False,
         index_col=0,
-        engine="c"
+        engine="c",
+        low_memory=False
     )
 
     data.to_hdf(OUTPUT_FILE, "data", mode="w", format="table")

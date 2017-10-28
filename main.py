@@ -1,9 +1,10 @@
 import pandas as pd
-from keras.layers import Dense
+from keras import callbacks
+from keras.layers import Dense, regularizers
 from keras.models import Sequential
 from keras.optimizers import SGD
 
-TRAININGS_DATA_FILE = "./processed_data/data_100.csv"
+TRAININGS_DATA_FILE = "./processed_data/data_10000.csv"
 
 if __name__ == "__main__":
     data = pd.read_csv(
@@ -21,15 +22,18 @@ if __name__ == "__main__":
     normalized_data = pd.concat([day, store, item, promotion], axis=1)
     print(normalized_data.head())
 
+    tb_cb = callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
+                                write_graph=True, write_images=True)
+
     model = Sequential([
-        Dense(128, input_dim=normalized_data.shape[1], activation="sigmoid"),
+        Dense(64, input_dim=normalized_data.shape[1], activation="sigmoid", kernel_regularizer=regularizers.l2(0.001)),
         Dense(1, activation="linear")
     ])
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(optimizer=sgd, loss="mse", metrics=["accuracy"],)
+    model.compile(optimizer=sgd, loss="mse", metrics=["mae"],)
 
-    model.fit(x=normalized_data.values, y=sales.values, epochs=1000, batch_size=100)
+    model.fit(x=normalized_data.values, y=sales.values, epochs=500, batch_size=100, callbacks=[tb_cb])
 
     prediction = model.predict(normalized_data.values)
 
