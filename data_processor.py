@@ -6,6 +6,10 @@ INPUT_FILE = "./data/train_10000.csv"
 OUTPUT_FILE = "./processed_data/data_10000.h5"
 
 if __name__ == "__main__":
+
+    print("Data pre-preprocessing started ...")
+    print("Loading CSV ... ")
+
     data = pd.read_csv(
         INPUT_FILE,
         converters={
@@ -18,10 +22,20 @@ if __name__ == "__main__":
         low_memory=False
     )
 
+    print("DONE")
+
+    print("Writing to HDF Store ...")
+
     data.to_hdf(OUTPUT_FILE, "data", mode="w", format="table")
     del data
 
+    print("DONE")
+
+    print("Loading HDF Store ... ")
     hdf = pd.HDFStore(OUTPUT_FILE)
+    print("DONE")
+
+    print("Normalizing Data ... ")
     id = hdf.select("data", where="columns = ['id']")
     day = pd.get_dummies(hdf.select("data", where="columns = ['date']"), columns=["date"])
     item = pd.get_dummies(hdf.select("data", where="columns = ['item_nbr']"), columns=["item_nbr"])
@@ -32,7 +46,13 @@ if __name__ == "__main__":
 
     del hdf
 
+    print("DONE")
+
+    print("Writing normalized data ... ")
+
     normalized_data = pd.concat([id, day, store, item, promotion, sales], axis=1)
     normalized_data.to_hdf(OUTPUT_FILE, "data", mode="w", format="table")
+
+    print("DONE")
 
     print(normalized_data.head())
