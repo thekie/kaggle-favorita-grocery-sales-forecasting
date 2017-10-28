@@ -1,38 +1,35 @@
+import os
+
 import pandas as pd
 from datetime import datetime
 
 
 INPUT_FILE = "./data/train_10000.csv"
 OUTPUT_FILE = "./processed_data/data_10000.h5"
+CHUNKSIZE = 50000
 
 if __name__ == "__main__":
 
     print("Data pre-preprocessing started ...")
-    print("Loading CSV ... ")
 
-    data = pd.read_csv(
-        INPUT_FILE,
-        converters={
-            "onpromotion": (lambda p: int(p == "True")),
-            "date": (lambda d: datetime.strptime(d, "%Y-%M-%d").weekday())
-        },
-        keep_default_na=False,
-        index_col=0,
-        engine="c",
-        low_memory=False
-    )
+    os.remove(OUTPUT_FILE)
 
-    print("DONE")
+    print("Loading CSV into HDF Store ... ")
 
-    print("Writing to HDF Store ...")
-
-    data.to_hdf(OUTPUT_FILE, "data", mode="w", format="table")
-    del data
-
-    print("DONE")
-
-    print("Loading HDF Store ... ")
     hdf = pd.HDFStore(OUTPUT_FILE)
+
+    converters = {
+        "onpromotion": (lambda p: int(p == "True")),
+        "date": (lambda d: datetime.strptime(d, "%Y-%M-%d").weekday())
+    }
+
+    i = 0
+    for chunk in pd.read_csv(INPUT_FILE, converters=converters, keep_default_na=False, index_col=0, chunksize=CHUNKSIZE):
+        hdf.append("data", chunk, index=False)
+        i += 1
+        print(i*CHUNKSIZE)
+    hdf.create_table_index("data")
+
     print("DONE")
 
     print("Normalizing Data ... ")
@@ -51,7 +48,7 @@ if __name__ == "__main__":
     print("Writing normalized data ... ")
 
     normalized_data = pd.concat([id, day, store, item, promotion, sales], axis=1)
-    normalized_data.to_hdf(OUTPUT_FILE, "data", mode="w", format="table")
+    normalized_data.to_hdf(OUTPUT_FILE, "normalized_data", mode="w", format="table")
 
     print("DONE")
 
