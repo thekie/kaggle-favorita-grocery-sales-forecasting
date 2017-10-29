@@ -4,8 +4,8 @@ import pandas as pd
 from datetime import datetime
 
 
-INPUT_FILE = "./data/train_10000.csv"
-OUTPUT_FILE = "./processed_data/data_10000.h5"
+INPUT_FILE = "./data/train_100.csv"
+OUTPUT_FILE = "./processed_data/data_100.h5"
 CHUNKSIZE = 50000
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     df = pd.read_csv(INPUT_FILE, usecols=["date"], converters={
         "date": (lambda d: datetime.strptime(d, "%Y-%M-%d").weekday())
     })
-    df = pd.get_dummies(df)
+    df = pd.get_dummies(df["date"])
     print("DONE")
 
     print("Saving Column 'date' ... ")
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     print("Loading Column 'item_nbr' ... ")
     df = pd.read_csv(INPUT_FILE, usecols=["item_nbr"], dtype='int32')
-    df = pd.get_dummies(df)
+    df = pd.get_dummies(df["item_nbr"])
     print("DONE")
 
     print("Saving Column 'item_nbr' ... ")
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     print("Loading Column 'store_nbr' ... ")
     df = pd.read_csv(INPUT_FILE, usecols=["store_nbr"], dtype='int16')
-    df = pd.get_dummies(df)
+    df = pd.get_dummies(df["store_nbr"])
     print("DONE")
 
     print("Saving Column 'store_nbr' ... ")
