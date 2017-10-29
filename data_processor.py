@@ -23,8 +23,16 @@ if __name__ == "__main__":
         "date": (lambda d: datetime.strptime(d, "%Y-%M-%d").weekday())
     }
 
+    types = {
+        'id': 'int64',
+        'item_nbr': 'int32',
+        'store_nbr': 'int16',
+        'unit_sales': 'float32',
+        'onpromotion': bool,
+    }
+
     i = 0
-    for chunk in pd.read_csv(INPUT_FILE, converters=converters, keep_default_na=False, index_col=0, chunksize=CHUNKSIZE):
+    for chunk in pd.read_csv(INPUT_FILE, dtype=types, converters=converters, keep_default_na=False, index_col=0, chunksize=CHUNKSIZE):
         hdf.append("data", chunk, index=False)
         i += 1
         print(i*CHUNKSIZE)
