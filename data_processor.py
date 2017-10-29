@@ -18,46 +18,66 @@ if __name__ == "__main__":
 
     hdf = pd.HDFStore(OUTPUT_FILE)
 
-    converters = {
-        "onpromotion": (lambda p: int(p == "True")),
+    print("Loading Column 'id' ... ")
+    df = pd.read_csv(INPUT_FILE, usecols=["id"], dtype='int64')
+    print("DONE")
+
+    print("Saving Column 'id' ... ")
+    df.to_hdf(OUTPUT_FILE, "ids")
+    del df
+    print("DONE")
+
+    print("Loading Column 'date' ... ")
+    df = pd.read_csv(INPUT_FILE, usecols=["date"], converters={
         "date": (lambda d: datetime.strptime(d, "%Y-%M-%d").weekday())
-    }
-
-    types = {
-        'id': 'int64',
-        'item_nbr': 'int32',
-        'store_nbr': 'int16',
-        'unit_sales': 'float32',
-        'onpromotion': bool,
-    }
-
-    i = 0
-    for chunk in pd.read_csv(INPUT_FILE, dtype=types, converters=converters, keep_default_na=False, index_col=0, chunksize=CHUNKSIZE):
-        hdf.append("data", chunk, index=False)
-        i += 1
-        print(i*CHUNKSIZE)
-    hdf.create_table_index("data")
-
+    })
+    df = pd.get_dummies(df)
     print("DONE")
 
-    print("Normalizing Data ... ")
-    id = hdf.select("data", where="columns = ['id']")
-    day = pd.get_dummies(hdf.select("data", where="columns = ['date']"), columns=["date"])
-    item = pd.get_dummies(hdf.select("data", where="columns = ['item_nbr']"), columns=["item_nbr"])
-    store = pd.get_dummies(hdf.select("data", where="columns = ['store_nbr']"), columns=["store_nbr"])
-    promotion = hdf.select("data", where="columns = ['onpromotion']")
-    sales = hdf.select("data", where="columns = ['unit_sales']")
+    print("Saving Column 'date' ... ")
+    df.to_hdf(OUTPUT_FILE, "days")
+    del df
+    print("DONE")
+
+    print("Loading Column 'item_nbr' ... ")
+    df = pd.read_csv(INPUT_FILE, usecols=["item_nbr"], dtype='int32')
+    df = pd.get_dummies(df)
+    print("DONE")
+
+    print("Saving Column 'item_nbr' ... ")
+    df.to_hdf(OUTPUT_FILE, "items")
+    del df
+    print("DONE")
+
+    print("Loading Column 'store_nbr' ... ")
+    df = pd.read_csv(INPUT_FILE, usecols=["store_nbr"], dtype='int16')
+    df = pd.get_dummies(df)
+    print("DONE")
+
+    print("Saving Column 'store_nbr' ... ")
+    df.to_hdf(OUTPUT_FILE, "stores")
+    del df
+    print("DONE")
+
+    print("Loading Column 'onpromotion' ... ")
+    df = pd.read_csv(INPUT_FILE, usecols=["onpromotion"], converters={
+        "onpromotion": (lambda p: int(p == "True")),
+    })
+    print("DONE")
+
+    print("Saving Column 'onpromotion' ... ")
+    df.to_hdf(OUTPUT_FILE, "sales")
+    del df
+    print("DONE")
+
+    print("Loading Column 'unit_sales' ... ")
+    df = pd.read_csv(INPUT_FILE, usecols=["unit_sales"], dtype='float32')
+    print("DONE")
+
+    print("Saving Column 'unit_sales' ... ")
+    df.to_hdf(OUTPUT_FILE, "sales")
+    del df
+    print("DONE")
+
+    print(hdf)
     hdf.close()
-
-    del hdf
-
-    print("DONE")
-
-    print("Writing normalized data ... ")
-
-    normalized_data = pd.concat([id, day, store, item, promotion, sales], axis=1)
-    normalized_data.to_hdf(OUTPUT_FILE, "normalized_data", mode="w", format="table")
-
-    print("DONE")
-
-    print(normalized_data.head())
